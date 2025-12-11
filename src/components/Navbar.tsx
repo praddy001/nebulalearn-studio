@@ -35,7 +35,7 @@ export const Navbar: React.FC = () => {
                 <GraduationCap className="w-6 h-6 text-primary-foreground" />
               </motion.div>
               <span className="font-heading font-bold text-xl gradient-text">
-                NebulaLearn
+                AI Assistant
               </span>
             </Link>
 

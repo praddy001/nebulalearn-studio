@@ -262,7 +262,7 @@ const Index = () => {
                 <div className="w-10 h-10 rounded-xl bg-gradient-hero flex items-center justify-center shadow-glow">
                   <GraduationCap className="w-6 h-6 text-primary-foreground" />
                 </div>
-                <span className="font-heading font-bold text-xl">NebulaLearn</span>
+                <span className="font-heading font-bold text-xl">AI assistant</span>
               </div>
               <p className="text-muted-foreground text-sm">
                 Empowering students and educators with intelligent tools for modern learning.
