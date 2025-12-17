@@ -1,7 +1,7 @@
 import React from 'react';
 import { DashboardSidebar } from '@/components/DashboardSidebar';
 import { DashboardTopbar } from '@/components/DashboardTopbar';
-import { ChatWidget } from '@/components/ChatWidget';
+import ChatWidget from "@/components/ChatWidget"; 
 import { motion } from 'framer-motion';
 
 interface DashboardLayoutProps {

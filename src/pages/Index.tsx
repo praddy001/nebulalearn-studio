@@ -5,7 +5,7 @@ import { VideoHero } from '@/components/VideoHero';
 import { FeatureCard } from '@/components/FeatureCard';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChatWidget } from '@/components/ChatWidget';
+import ChatWidget from "@/components/ChatWidget";
 import { Link } from 'react-router-dom';
 import { 
   FileText, 

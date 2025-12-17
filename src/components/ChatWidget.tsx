@@ -3,13 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { 
-  MessageCircle, 
-  X, 
-  Send, 
+import {
+  MessageCircle,
+  X,
+  Send,
   Minimize2,
   Bot,
-  User,
 } from 'lucide-react';
 
 interface Message {
@@ -19,7 +18,7 @@ interface Message {
   timestamp: Date;
 }
 
-export const ChatWidget: React.FC = () => {
+const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [message, setMessage] = useState('');
@@ -32,29 +31,55 @@ export const ChatWidget: React.FC = () => {
     },
   ]);
 
-  const handleSend = () => {
+  // ✅ SINGLE, CORRECT SEND HANDLER
+  const handleSend = async () => {
     if (!message.trim()) return;
 
-    const newMessage: Message = {
+    const userMessage: Message = {
       id: Date.now().toString(),
       text: message,
       sender: 'user',
       timestamp: new Date(),
     };
 
-    setMessages([...messages, newMessage]);
+    // Add user message immediately
+    setMessages(prev => [...prev, userMessage]);
+    const currentMessage = message;
     setMessage('');
 
-    // Simulate bot response
-    setTimeout(() => {
-      const botResponse: Message = {
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: currentMessage }),
+      });
+
+      if (!res.ok) throw new Error('Server error');
+
+      const data = await res.json();
+
+      const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: "Thanks for your message! I'm here to help with notes, timetables, and anything else you need. What would you like to know?",
+        text: data.reply,
         sender: 'bot',
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, botResponse]);
-    }, 1000);
+
+      setMessages(prev => [...prev, botMessage]);
+
+    } catch (error) {
+      setMessages(prev => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          text: 'Server not reachable ❌',
+          sender: 'bot',
+          timestamp: new Date(),
+        },
+      ]);
+    }
   };
 
   return (
@@ -65,10 +90,11 @@ export const ChatWidget: React.FC = () => {
             initial={{ opacity: 0, scale: 0.8, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
             className="mb-4"
           >
             <Card variant="elevated" className="w-80 sm:w-96 overflow-hidden shadow-soft-lg">
+
               {/* Header */}
               <div className="bg-gradient-hero p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -79,9 +105,12 @@ export const ChatWidget: React.FC = () => {
                     <h3 className="font-heading font-semibold text-primary-foreground">
                       Nebula Assistant
                     </h3>
-                    <p className="text-xs text-primary-foreground/70">Always here to help</p>
+                    <p className="text-xs text-primary-foreground/70">
+                      Always here to help
+                    </p>
                   </div>
                 </div>
+
                 <div className="flex items-center gap-1">
                   <Button
                     variant="ghost"
@@ -91,6 +120,7 @@ export const ChatWidget: React.FC = () => {
                   >
                     <Minimize2 className="w-4 h-4" />
                   </Button>
+
                   <Button
                     variant="ghost"
                     size="icon-sm"
@@ -104,7 +134,7 @@ export const ChatWidget: React.FC = () => {
 
               {/* Messages */}
               <div className="h-80 overflow-y-auto p-4 space-y-4 bg-secondary/30">
-                {messages.map((msg) => (
+                {messages.map(msg => (
                   <motion.div
                     key={msg.id}
                     initial={{ opacity: 0, y: 10 }}
@@ -145,16 +175,14 @@ export const ChatWidget: React.FC = () => {
                   </Button>
                 </form>
               </div>
+
             </Card>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Toggle Button */}
-      <motion.div
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-      >
+      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
         <Button
           variant="hero"
           size="icon-lg"
