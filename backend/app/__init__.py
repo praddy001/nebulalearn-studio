@@ -20,7 +20,15 @@ def create_app():
 
     # ✅ CORS — ALLOW YOUR ACTUAL FRONTEND
     frontend = os.getenv("FRONTEND_URL", "http://localhost:8080")
-    CORS(app, origins=[frontend], supports_credentials=True)
+
+    CORS(
+        app,
+        resources={r"/api/*": {"origins": frontend}},
+        supports_credentials=True
+    )
+
+    BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+    app.config["UPLOAD_FOLDER"] = os.path.join(BASE_DIR, "uploads")
 
     # uploads folder
     os.makedirs(app.config.get("UPLOAD_FOLDER", "uploads"), exist_ok=True)

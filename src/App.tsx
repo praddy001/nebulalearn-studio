@@ -4,12 +4,14 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
+import TeacherUpload from "./pages/TeacherUpload";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./routes/ProtectedRoute";
+import NotesList from "./pages/NotesList";
 
 const queryClient = new QueryClient();
 
@@ -25,7 +27,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
-          {/* Role-based dashboards */}
+          {/* Protected routes */}
           <Route
             path="/dashboard"
             element={
@@ -35,13 +37,25 @@ const App = () => (
             }
           />
 
-          {/* Redirect old /dashboard */}
           <Route
-            path="/dashboard"
-            element={<Navigate to="/login" replace />}
+            path="/teacher/upload"
+            element={
+              <ProtectedRoute role="teacher">
+                <TeacherUpload />
+              </ProtectedRoute>
+            }
           />
 
-          {/* 404 */}
+          <Route
+            path="/notes"
+            element={
+              <ProtectedRoute role={null}>
+                <NotesList />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Fallback */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
