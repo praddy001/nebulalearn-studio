@@ -48,21 +48,26 @@ const ChatWidget: React.FC = () => {
     setMessage('');
 
     try {
-      const res = await fetch('/api/chat', {
+      const res = await fetch("/api/chat/ask", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
-        body: JSON.stringify({ message: currentMessage }),
+        body: JSON.stringify({ question: currentMessage }),
       });
 
       if (!res.ok) throw new Error('Server error');
 
       const data = await res.json();
 
+      const botText = data.sources?.length
+        ? `${data.answer}\n\n📚 Sources:\n• ${data.sources.join("\n• ")}`
+        : data.answer;
+
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: data.reply,
+        text: botText,
         sender: 'bot',
         timestamp: new Date(),
       };

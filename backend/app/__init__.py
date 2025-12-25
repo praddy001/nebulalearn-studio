@@ -10,6 +10,7 @@ from .routes.chat_routes import chat_bp
 from .routes.notes_routes import notes_bp
 from .routes.student import student_bp
 
+
 migrate = Migrate() 
 
 load_dotenv()
@@ -41,8 +42,8 @@ def create_app():
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(files_bp, url_prefix="/api/files")
     app.register_blueprint(student_bp, url_prefix="/api/student")
-    app.register_blueprint(chat_bp, url_prefix="/api")
     app.register_blueprint(notes_bp, url_prefix="/api")
+    app.register_blueprint(chat_bp)
 
     @app.route("/api/health")
     def health():

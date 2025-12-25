@@ -1,27 +1,26 @@
 import os
+import fitz  # PyMuPDF
+from docx import Document
 
-def extract_text_from_file(file_path: str) -> str:
-    """
-    Extract text from uploaded files.
-    Currently supports TXT files.
-    PDF/DOCX support can be added later.
-    """
-    if not os.path.exists(file_path):
-        return ""
 
-    ext = os.path.splitext(file_path)[1].lower()
+def extract_text_from_file(path: str) -> str:
+    ext = os.path.splitext(path)[1].lower()
 
     try:
-        if ext == ".txt":
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-                return f.read()
+        # -------- PDF --------
+        if ext == ".pdf":
+            text = ""
+            with fitz.open(path) as doc:
+                for page in doc:
+                    text += page.get_text()
+            return text.strip()
 
-        elif ext in [".pdf", ".docx"]:
-            # Placeholder for future implementation
-            return ""
+        # -------- DOCX --------
+        elif ext == ".docx":
+            doc = Document(path)
+            return "\n".join(p.text for p in doc.paragraphs).strip()
 
-        else:
-            return ""
     except Exception as e:
-        print("Text extraction error:", e)
-        return ""
+        print("❌ TEXT EXTRACTION ERROR:", e)
+
+    return ""
