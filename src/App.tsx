@@ -3,7 +3,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-
 import TeacherUpload from "./pages/TeacherUpload";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -12,6 +11,11 @@ import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import NotesList from "./pages/NotesList";
+import TeacherAttendance from "./pages/teacher/TeacherAttendance";
+import TeacherEvents from "./pages/teacher/TeacherEvents";
+import StudentAttendance from "./pages/student/StudentAttendance";
+import StudentEvents from "./pages/student/StudentEvents";
+
 
 const queryClient = new QueryClient();
 
@@ -38,6 +42,24 @@ const App = () => (
           />
 
           <Route
+            path="/teacher/attendance"
+            element={
+              <ProtectedRoute role="teacher">
+                <TeacherAttendance />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/teacher/events"
+            element={
+              <ProtectedRoute role="teacher">
+                <TeacherEvents />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/teacher/upload"
             element={
               <ProtectedRoute role="teacher">
@@ -51,6 +73,23 @@ const App = () => (
             element={
               <ProtectedRoute role={null}>
                 <NotesList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/attendance"
+            element={
+              <ProtectedRoute role="student">
+                <StudentAttendance />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/student/events"
+            element={
+              <ProtectedRoute role="student">
+                <StudentEvents />
               </ProtectedRoute>
             }
           />

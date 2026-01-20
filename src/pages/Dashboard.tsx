@@ -39,9 +39,27 @@ const studentCards = [
     subtitle: "Today",
     href: "/timetable",
   },
+  {
+    icon: Calendar,
+    title: "Events & Notices",
+    subtitle: "Latest updates",
+    href: "/student/events",
+  },
 ];
 
 const teacherCards = [
+  {
+    icon: Users,
+    title: "Manage Attendance",
+    subtitle: "Mark / Update",
+    href: "/teacher/attendance",
+  },
+  {
+    icon: Calendar,
+    title: "Post Events",
+    subtitle: "Create notice",
+    href: "/teacher/events",
+  },
   {
     icon: Upload,
     title: "Upload Notes",
