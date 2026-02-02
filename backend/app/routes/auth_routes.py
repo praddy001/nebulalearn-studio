@@ -5,6 +5,8 @@ from ..utils.jwt_utils import (
     token_required,
     get_current_user,
 )
+from app.extension import db
+from app.models import User
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/api/auth")
 

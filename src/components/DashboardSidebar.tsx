@@ -28,16 +28,17 @@
     { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
     { icon: FileText, label: 'Notes', href: '/notes' },
     { icon: Calendar, label: 'Timetable', href: '/timetable' },
-    { icon: Clock, label: 'Attendance', href: '/dashboard/attendance' },
-    { icon: Users, label: 'Events', href: '/events' },
+    { icon: Clock, label: 'Attendance', href: '/student/attendance' },
+    { icon: Users, label: 'Events', href: '/student/events' },
     { icon: MessageSquare, label: 'Messages', href: '/dashboard/messages', badge: '3' },
   ];
 
   const staffItems: SidebarItem[] = [
-    { icon: LayoutDashboard, label: 'Dashboard', href: '/staff' },
-    { icon: FileText, label: 'Upload Notes', href: '/staff/upload' },
+     { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
+    { icon: FileText, label: 'Upload Notes', href: '/teacher/upload' },
+    { icon: Calendar, label: 'Events', href: '/teacher/events' },
     { icon: Calendar, label: 'Timetable', href: '/staff/timetable' },
-    { icon: Clock, label: 'Attendance', href: '/staff/attendance' },
+    { icon: Clock, label: 'Attendance', href: '/teacher/attendance' },
     { icon: Users, label: 'Students', href: '/staff/students' },
     { icon: MessageSquare, label: 'Messages', href: '/staff/messages', badge: '5' },
   ];

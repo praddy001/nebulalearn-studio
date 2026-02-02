@@ -45,6 +45,12 @@ const studentCards = [
     subtitle: "Latest updates",
     href: "/student/events",
   },
+  {
+    icon: Calendar,
+    title: "Attendance",
+    subtitle: "Latest updates",
+    href: "/student/attendance",
+  },
 ];
 
 const teacherCards = [

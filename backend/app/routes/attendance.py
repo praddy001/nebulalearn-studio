@@ -1,13 +1,70 @@
 from flask import Blueprint, request, jsonify
-from ..utils.jwt_utils import (
-    create_access_token,
-    token_required,
-    get_current_user,
-)
 from datetime import datetime
 
-from models.attendance import Attendance
-from models.user import User
 from app import db
+from app.models import Attendance
+from ..utils.jwt_utils import (
+    token_required,
+    teacher_required,
+    get_current_user,
+)
 
-attendance_bp = Blueprint("attendance", __name__)
+attendance_bp = Blueprint(
+    "attendance",
+    __name__,
+    url_prefix="/api/attendance"
+)
+
+@attendance_bp.route("", methods=["POST", "OPTIONS"])
+def mark_attendance():
+
+    # ✅ CORS preflight must bypass auth
+    if request.method == "OPTIONS":
+        return "", 200
+
+    # ✅ Apply auth ONLY for POST
+    @token_required
+    @teacher_required
+    def handle_post():
+        data = request.get_json()
+
+        attendance = Attendance(
+            student_id=data["student_id"],
+            date=datetime.strptime(data["date"], "%Y-%m-%d").date(),
+            status=data["status"]
+        )
+
+        db.session.add(attendance)
+        db.session.commit()
+
+        return jsonify({"message": "Attendance marked successfully"}), 201
+
+    return handle_post()
+
+
+@attendance_bp.route("/student", methods=["GET", "OPTIONS"])
+def get_my_attendance():
+
+    # ✅ Allow CORS preflight WITHOUT auth
+    if request.method == "OPTIONS":
+        return "", 200
+
+    # 🔐 Apply auth ONLY for GET
+    @token_required
+    def handle_get():
+        user = get_current_user()  # student from JWT
+        print("Logged-in student ID:", user.id)
+
+        records = Attendance.query.filter_by(student_id=user.id).all()
+
+        return jsonify([
+            {
+                "date": r.date.strftime("%Y-%m-%d"),
+                "status": r.status
+            }
+            for r in records
+        ]), 200
+
+    return handle_get()
+
+

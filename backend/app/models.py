@@ -1,17 +1,13 @@
-from datetime import datetime
-from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime, date
 from werkzeug.security import generate_password_hash, check_password_hash
+from app.extension import db
 
-db = SQLAlchemy()
 
 class User(db.Model):
     __tablename__ = "user"
 
     id = db.Column(db.Integer, primary_key=True)
-
-    # ✅ SINGLE name column (safe for SQLite)
     name = db.Column(db.String(120), nullable=True)
-
     email = db.Column(db.String(255), unique=True, index=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(20), nullable=False, default="student")
@@ -36,5 +32,19 @@ class File(db.Model):
     uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     content_text = db.Column(db.Text)
-
     user = db.relationship("User", backref=db.backref("files", lazy="dynamic"))
+
+
+class Attendance(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    date = db.Column(db.Date, default=date.today)
+    status = db.Column(db.String(10), nullable=False)
+
+
+class Event(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    event_date = db.Column(db.Date, nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey("user.id"))
