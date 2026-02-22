@@ -29,6 +29,11 @@ def get_current_user():
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
+
+        # ✅ VERY IMPORTANT: Allow CORS preflight
+        if request.method == "OPTIONS":
+            return '', 200
+
         auth = request.headers.get("Authorization", "")
         if not auth:
             abort(401, description="authorization header required")
@@ -48,7 +53,9 @@ def token_required(f):
 
         g._current_user = user
         return f(*args, **kwargs)
+
     return decorated
+
 
 
 def teacher_required(f):

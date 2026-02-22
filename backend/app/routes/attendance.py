@@ -41,6 +41,34 @@ def mark_attendance():
 
     return handle_post()
 
+@attendance_bp.route("/bulk", methods=["POST", "OPTIONS"])
+def bulk_attendance():
+
+    # ✅ Allow CORS preflight
+    if request.method == "OPTIONS":
+        return "", 200
+
+    @token_required
+    @teacher_required
+    def handle_post():
+        data = request.get_json()
+
+        date = datetime.strptime(data["date"], "%Y-%m-%d").date()
+        records = data["records"]
+
+        for record in records:
+            attendance = Attendance(
+                student_id=record["student_id"],
+                date=date,
+                status=record["status"]
+            )
+            db.session.add(attendance)
+
+        db.session.commit()
+
+        return jsonify({"message": "Bulk attendance saved"}), 201
+
+    return handle_post()
 
 @attendance_bp.route("/student", methods=["GET", "OPTIONS"])
 def get_my_attendance():
