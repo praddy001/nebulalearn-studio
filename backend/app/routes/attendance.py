@@ -95,4 +95,42 @@ def get_my_attendance():
 
     return handle_get()
 
+@attendance_bp.route("/students-summary", methods=["GET", "OPTIONS"])
+def get_students_summary():
 
+    if request.method == "OPTIONS":
+        return "", 200
+
+    @token_required
+    @teacher_required
+    def handle_get():
+
+        from app.models import User
+
+        students = User.query.filter_by(role="student").all()
+
+        result = []
+
+        for s in students:
+
+            records = Attendance.query.filter_by(student_id=s.id).all()
+
+            total = len(records)
+            present = len([r for r in records if r.status.lower() == "present"])
+            absent = total - present
+
+            percentage = (present / total * 100) if total > 0 else 0
+
+            result.append({
+                "id": s.id,
+                "name": s.name,
+                "email": s.email,
+                "total_classes": total,
+                "present": present,
+                "absent": absent,
+                "percentage": round(percentage, 2)
+            })
+
+        return jsonify(result)
+
+    return handle_get()

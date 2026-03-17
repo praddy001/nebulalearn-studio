@@ -48,3 +48,10 @@ class Event(db.Model):
     description = db.Column(db.Text, nullable=False)
     event_date = db.Column(db.Date, nullable=False)
     created_by = db.Column(db.Integer, db.ForeignKey("user.id"))
+
+class ChatHistory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+    question = db.Column(db.Text)
+    answer = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)

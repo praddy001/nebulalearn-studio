@@ -15,6 +15,8 @@ import TeacherAttendance from "./pages/teacher/TeacherAttendance";
 import TeacherEvents from "./pages/teacher/TeacherEvents";
 import StudentAttendance from "./pages/student/StudentAttendance";
 import StudentEvents from "./pages/student/StudentEvents";
+import TeacherStudents from "./pages/teacher/TeacherStudents";
+
 
 
 const queryClient = new QueryClient();
@@ -67,6 +69,16 @@ const App = () => (
               </ProtectedRoute>
             }
           />
+          
+
+          <Route
+            path="/teacher/students"
+            element={
+              <ProtectedRoute role="teacher">
+                <TeacherStudents />
+              </ProtectedRoute>
+            }
+          />
 
           <Route
             path="/notes"
@@ -76,6 +88,7 @@ const App = () => (
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/student/attendance"
             element={
@@ -93,6 +106,7 @@ const App = () => (
               </ProtectedRoute>
             }
           />
+
 
           {/* Fallback */}
           <Route path="*" element={<NotFound />} />

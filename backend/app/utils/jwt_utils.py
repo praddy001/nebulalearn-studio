@@ -66,3 +66,12 @@ def teacher_required(f):
             abort(403, description="teacher access required")
         return f(*args, **kwargs)
     return decorated
+
+def admin_required(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        user = get_current_user()
+        if not user or user.role != "admin":
+            abort(403, description="admin access required")
+        return f(*args, **kwargs)
+    return wrapper

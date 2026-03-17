@@ -1,357 +1,319 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";  // ← fixed
 import api from "@/services/api";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+
+const HomeIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2 7-7 7 7 2 2M5 10v10a1 1 0 001 1h3m10-11v10a1 1 0 01-1 1h-3m-6 0v-4a1 1 0 011-1h2a1 1 0 011 1v4" />
+  </svg>
+);
+
+const StatusToggle = ({ status, onChange }) => {
+  const isPresent = status === "Present";
+  return (
+    <div
+      onClick={() => onChange(isPresent ? "Absent" : "Present")}
+      style={{
+        display: "inline-flex", alignItems: "center", gap: 8, cursor: "pointer",
+        backgroundColor: isPresent ? "rgba(52,211,153,0.1)" : "rgba(248,113,113,0.1)",
+        border: `1px solid ${isPresent ? "rgba(52,211,153,0.35)" : "rgba(248,113,113,0.35)"}`,
+        borderRadius: 10, padding: "6px 14px", fontSize: 13, fontWeight: 600,
+        color: isPresent ? "#34d399" : "#f87171", transition: "all 0.2s", userSelect: "none",
+        minWidth: 110,
+      }}
+    >
+      <span style={{
+        width: 8, height: 8, borderRadius: "50%", flexShrink: 0,
+        backgroundColor: isPresent ? "#34d399" : "#f87171",
+        boxShadow: `0 0 6px ${isPresent ? "#34d399" : "#f87171"}`,
+      }} />
+      {isPresent ? "Present" : "Absent"}
+    </div>
+  );
+};
 
 export default function Attendance() {
   const [date, setDate] = useState("");
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
   const [students, setStudents] = useState([]);
   const [attendanceData, setAttendanceData] = useState({});
   const [selectAll, setSelectAll] = useState(false);
+  const [success, setSuccess] = useState(null);
+  const [error, setError] = useState(null);
+  const [search, setSearch] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
-    api
-      .get("/students")
+    setFetching(true);
+    api.get("/students")
       .then((res) => {
         setStudents(res.data);
-        // Initialize attendance data for all students
-        const initialData = {};
-        res.data.forEach((student) => {
-          initialData[student.id] = {
-            status: "Present",
-            selected: false,
-          };
-        });
-        setAttendanceData(initialData);
+        const init = {};
+        res.data.forEach((s) => { init[s.id] = { status: "Present", selected: false }; });
+        setAttendanceData(init);
       })
-      .catch((err) => console.error("Failed to load students", err));
+      .catch(() => setError("Failed to load students."))
+      .finally(() => setFetching(false));
   }, []);
 
-  // Handle individual checkbox
-  const handleCheckbox = (studentId) => {
-    setAttendanceData((prev) => ({
-      ...prev,
-      [studentId]: {
-        ...prev[studentId],
-        selected: !prev[studentId].selected,
-      },
-    }));
-  };
+  const handleCheckbox = (id) =>
+    setAttendanceData((prev) => ({ ...prev, [id]: { ...prev[id], selected: !prev[id].selected } }));
 
-  // Handle select all checkbox
   const handleSelectAll = () => {
-    const newSelectAll = !selectAll;
-    setSelectAll(newSelectAll);
-    const updatedData = {};
-    students.forEach((student) => {
-      updatedData[student.id] = {
-        ...attendanceData[student.id],
-        selected: newSelectAll,
-      };
-    });
-    setAttendanceData(updatedData);
+    const next = !selectAll;
+    setSelectAll(next);
+    const upd = {};
+    students.forEach((s) => { upd[s.id] = { ...attendanceData[s.id], selected: next }; });
+    setAttendanceData(upd);
   };
 
-  // Handle status change for individual student
-  const handleStatusChange = (studentId, status) => {
-    setAttendanceData((prev) => ({
-      ...prev,
-      [studentId]: {
-        ...prev[studentId],
-        status: status,
-      },
-    }));
+  const handleStatusChange = (id, status) =>
+    setAttendanceData((prev) => ({ ...prev, [id]: { ...prev[id], status } }));
+
+  const bulkStatus = (status) => {
+    const upd = {};
+    students.forEach((s) => { upd[s.id] = { ...attendanceData[s.id], status }; });
+    setAttendanceData(upd);
   };
 
-  // Mark all as Present
-  const markAllPresent = () => {
-    const updatedData = {};
-    students.forEach((student) => {
-      updatedData[student.id] = {
-        ...attendanceData[student.id],
-        status: "Present",
-      };
-    });
-    setAttendanceData(updatedData);
-  };
-
-  // Mark all as Absent
-  const markAllAbsent = () => {
-    const updatedData = {};
-    students.forEach((student) => {
-      updatedData[student.id] = {
-        ...attendanceData[student.id],
-        status: "Absent",
-      };
-    });
-    setAttendanceData(updatedData);
-  };
-
-  // Submit attendance
   const submitAttendance = async () => {
-    // Get only selected students
-    const selectedRecords = students
-      .filter((student) => attendanceData[student.id]?.selected)
-      .map((student) => ({
-        student_id: student.id,
-        status: attendanceData[student.id].status,
-      }));
-
-    if (selectedRecords.length === 0) {
-      alert("Please select at least one student");
-      return;
-    }
-
-    if (!date) {
-      alert("Please select a date");
-      return;
-    }
-
+    const records = students
+      .filter((s) => attendanceData[s.id]?.selected)
+      .map((s) => ({ student_id: s.id, status: attendanceData[s.id].status }));
+    if (!date) { setError("Please select a date."); return; }
+    if (records.length === 0) { setError("Please select at least one student."); return; }
+    setLoading(true); setError(null); setSuccess(null);
     try {
-      setLoading(true);
-      await api.post("/attendance/bulk", {
-        date,
-        records: selectedRecords,
-      });
-
-      alert(`Attendance marked successfully for ${selectedRecords.length} students`);
-      
-      // Reset selections
-      const resetData = {};
-      students.forEach((student) => {
-        resetData[student.id] = {
-          status: "Present",
-          selected: false,
-        };
-      });
-      setAttendanceData(resetData);
+      await api.post("/attendance/bulk", { date, records });
+      setSuccess(`Attendance marked for ${records.length} student${records.length > 1 ? "s" : ""}.`);
+      const reset = {};
+      students.forEach((s) => { reset[s.id] = { status: "Present", selected: false }; });
+      setAttendanceData(reset);
       setSelectAll(false);
       setDate("");
-    } catch (err) {
-      alert("Failed to mark attendance");
-      console.error(err);
+      setTimeout(() => setSuccess(null), 4000);
+    } catch {
+      setError("Failed to submit attendance. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const selectedCount = students.filter(
-    (student) => attendanceData[student.id]?.selected
-  ).length;
+  const filtered = students.filter((s) =>
+    s.name?.toLowerCase().includes(search.toLowerCase()) ||
+    String(s.roll_no || "").includes(search)
+  );
+
+  const selectedCount = students.filter((s) => attendanceData[s.id]?.selected).length;
+  const presentCount = students.filter((s) => attendanceData[s.id]?.status === "Present").length;
+  const absentCount = students.length - presentCount;
 
   return (
-    <div className="min-h-screen bg-[#0f172a] py-12 px-6 flex flex-col items-center relative overflow-hidden text-slate-200">
-      
-      {/* Background Glow */}
-      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-emerald-500/10 blur-[120px] rounded-full" />
+    <div style={{ minHeight: "100vh", backgroundColor: "#0a0f1e", padding: "48px 24px", color: "#e2e8f0", position: "relative", overflow: "hidden" }}>
 
-      {/* Floating Home Button */}
+      {/* Background */}
+      <div style={{ position: "fixed", inset: 0, pointerEvents: "none", backgroundImage: "linear-gradient(rgba(16,185,129,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(16,185,129,0.03) 1px,transparent 1px)", backgroundSize: "40px 40px" }} />
+      <div style={{ position: "fixed", top: -80, right: -80, width: 480, height: 480, background: "radial-gradient(circle,rgba(16,185,129,0.07) 0%,transparent 70%)", pointerEvents: "none" }} />
+      <div style={{ position: "fixed", bottom: -120, left: -80, width: 380, height: 380, background: "radial-gradient(circle,rgba(6,182,212,0.05) 0%,transparent 70%)", pointerEvents: "none" }} />
+
+      {/* Home Button */}
       <motion.button
         onClick={() => navigate("/dashboard")}
-        whileHover={{ scale: 1.08 }}
-        whileTap={{ scale: 0.95 }}
-        className="fixed top-6 left-6 z-50 bg-slate-800/80 backdrop-blur-md border border-slate-700 p-3 rounded-xl text-emerald-400 shadow-lg"
+        whileHover={{ scale: 1.08, backgroundColor: "rgba(52,211,153,0.1)" }}
+        whileTap={{ scale: 0.93 }}
+        style={{ position: "fixed", top: 24, left: 24, zIndex: 50, backgroundColor: "rgba(30,41,59,0.9)", border: "1px solid rgba(100,116,139,0.4)", backdropFilter: "blur(8px)", borderRadius: 14, padding: 12, color: "#34d399", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "background-color 0.2s" }}
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="22"
-          height="22"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M3 12l2-2 7-7 7 7 2 2M5 10v10a1 1 0 001 1h3m10-11v10a1 1 0 01-1 1h-3m-6 0v-4a1 1 0 011-1h2a1 1 0 011 1v4"
-          />
-        </svg>
+        <HomeIcon />
       </motion.button>
 
-      <div className="max-w-7xl w-full relative z-10">
-        
+      <div style={{ maxWidth: 1000, margin: "0 auto", position: "relative", zIndex: 10 }}>
+
         {/* Header */}
-        <motion.header
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8 text-center"
-        >
-          <p className="text-slate-400 text-xs uppercase tracking-widest mb-8">
-            Teacher Control Panel • Academic Year 2024-25
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} style={{ textAlign: "center", marginBottom: 36 }}>
+          <p style={{ color: "#475569", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 10 }}>
+            Teacher Control Panel · Academic Year 2024–25
           </p>
-        </motion.header>
+          <h1 style={{ fontSize: 36, fontWeight: 800, color: "#f1f5f9", letterSpacing: "-0.02em", margin: 0 }}>
+            Mark <span style={{ color: "#34d399" }}>Attendance</span>
+          </h1>
+        </motion.div>
+
+        {/* Alerts */}
+        <AnimatePresence>
+          {success && (
+            <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+              style={{ marginBottom: 16, padding: "13px 18px", backgroundColor: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.3)", borderRadius: 14, color: "#34d399", fontSize: 13, fontWeight: 500, textAlign: "center" }}>
+              ✓ {success}
+            </motion.div>
+          )}
+          {error && (
+            <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+              style={{ marginBottom: 16, padding: "13px 18px", backgroundColor: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.3)", borderRadius: 14, color: "#f87171", fontSize: 13, textAlign: "center" }}>
+              {error}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Control Panel */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6 mb-6 shadow-xl"
-        >
-          <div className="flex flex-wrap items-end gap-4">
-            {/* Date Selector */}
-            <div className="flex-1 min-w-[200px]">
-              <label className="block text-xs font-semibold uppercase tracking-wide text-emerald-400 mb-2">
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+          style={{ backgroundColor: "rgba(30,41,59,0.6)", border: "1px solid rgba(100,116,139,0.25)", borderRadius: 20, padding: 24, marginBottom: 16, backdropFilter: "blur(12px)" }}>
+
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", gap: 16 }}>
+            <div style={{ flex: "1 1 200px" }}>
+              <label style={{ display: "block", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#34d399", marginBottom: 8 }}>
                 Session Date
               </label>
-              <Input
+              <input
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="bg-background text-foreground border-input focus-visible:ring-emerald-500/40"
+                style={{ backgroundColor: "rgba(15,23,42,0.8)", border: "1px solid rgba(100,116,139,0.4)", borderRadius: 12, padding: "10px 14px", fontSize: 14, color: "#e2e8f0", outline: "none", width: "100%", boxSizing: "border-box", colorScheme: "dark" }}
               />
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-wrap gap-3">
-              <Button
-                onClick={markAllPresent}
-                variant="outline"
-                className="border-emerald-500/60 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-400 px-5 py-2.5 rounded-lg font-medium transition-all"
-              >
-                ✓ Mark All Present
-              </Button>
-              <Button
-                onClick={markAllAbsent}
-                variant="outline"
-                className="border-emerald-500/60 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-400 px-5 py-2.5 rounded-lg font-medium transition-all"
-              >
-                ✗ Mark All Absent
-              </Button>
-              <Button
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+              {[
+                { label: "✓ All Present", fn: () => bulkStatus("Present"), color: "#34d399" },
+                { label: "✗ All Absent", fn: () => bulkStatus("Absent"), color: "#f87171" },
+              ].map(({ label, fn, color }) => (
+                <button key={label} onClick={fn}
+                  style={{ padding: "10px 18px", borderRadius: 12, border: `1px solid ${color}40`, backgroundColor: `${color}10`, color, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "background-color 0.2s" }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = `${color}20`}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = `${color}10`}
+                >
+                  {label}
+                </button>
+              ))}
+
+              <motion.button
                 onClick={submitAttendance}
                 disabled={loading || selectedCount === 0 || !date}
-                className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-6 py-2.5 rounded-lg font-semibold shadow-md disabled:opacity-30 disabled:bg-slate-700 transition-all"
+                whileHover={selectedCount > 0 && date && !loading ? { scale: 1.03, boxShadow: "0 0 24px rgba(52,211,153,0.3)" } : {}}
+                whileTap={selectedCount > 0 && date && !loading ? { scale: 0.97 } : {}}
+                style={{
+                  padding: "10px 22px", borderRadius: 12, border: "none", fontSize: 13, fontWeight: 700,
+                  cursor: selectedCount > 0 && date && !loading ? "pointer" : "not-allowed",
+                  background: selectedCount > 0 && date && !loading ? "linear-gradient(135deg,#34d399,#06b6d4)" : "rgba(51,65,85,0.6)",
+                  color: selectedCount > 0 && date && !loading ? "#0a0f1e" : "#475569",
+                  transition: "all 0.2s", display: "flex", alignItems: "center", gap: 8,
+                }}
               >
-                {loading
-                  ? "Submitting..."
-                  : `Submit Attendance (${selectedCount})`}
-              </Button>
+                {loading ? (
+                  <>
+                    <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      style={{ display: "inline-block", width: 13, height: 13, border: "2px solid #0a0f1e", borderTopColor: "transparent", borderRadius: "50%" }} />
+                    Submitting…
+                  </>
+                ) : `Submit (${selectedCount})`}
+              </motion.button>
             </div>
           </div>
 
-          {/* Info Bar */}
-          <div className="mt-4 flex items-center gap-6 text-sm text-slate-400">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
-              <span>Total Students: {students.length}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-              <span>Selected: {selectedCount}</span>
-            </div>
+          <div style={{ display: "flex", gap: 20, marginTop: 18, flexWrap: "wrap" }}>
+            {[
+              { dot: "#94a3b8", label: `Total: ${students.length}` },
+              { dot: "#60a5fa", label: `Selected: ${selectedCount}` },
+              { dot: "#34d399", label: `Present: ${presentCount}` },
+              { dot: "#f87171", label: `Absent: ${absentCount}` },
+            ].map(({ dot, label }) => (
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, color: "#94a3b8" }}>
+                <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: dot, flexShrink: 0 }} />
+                {label}
+              </div>
+            ))}
           </div>
         </motion.div>
 
-        {/* Attendance Table */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-xl overflow-hidden"
-        >
-          <div className="overflow-x-auto">
-            <div className="max-h-[600px] overflow-y-auto">
-              <table className="w-full border-collapse">
-                {/* Table Header */}
-                <thead className="bg-slate-900/60 sticky top-0 z-10">
-                  <tr className="border-b border-slate-700">
-                    <th className="px-4 py-4 text-left w-12">
-                      <input
-                        type="checkbox"
-                        checked={selectAll}
-                        onChange={handleSelectAll}
-                        className="w-5 h-5 text-emerald-600 border-slate-600 rounded focus:ring-emerald-500 cursor-pointer"
-                      />
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-slate-300 uppercase tracking-wide w-24">
-                      Roll No
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-slate-300 uppercase tracking-wide">
-                      Student Name
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-slate-300 uppercase tracking-wide w-48">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
+        {/* Table */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+          style={{ backgroundColor: "rgba(30,41,59,0.5)", border: "1px solid rgba(100,116,139,0.25)", borderRadius: 20, overflow: "hidden", backdropFilter: "blur(12px)" }}>
 
-                {/* Table Body */}
-                <tbody>
-                  {students.length === 0 ? (
-                    <tr>
-                      <td colSpan="4" className="px-6 py-12 text-center text-slate-400">
-                        No students found. Please add students to mark attendance.
-                      </td>
+          <div style={{ padding: "16px 20px", borderBottom: "1px solid rgba(100,116,139,0.2)" }}>
+            <input
+              placeholder="Search student by name or roll no…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ backgroundColor: "rgba(15,23,42,0.8)", border: "1px solid rgba(100,116,139,0.35)", borderRadius: 10, padding: "8px 14px", fontSize: 13, color: "#e2e8f0", outline: "none", width: 280, boxSizing: "border-box" }}
+            />
+          </div>
+
+          <div style={{ overflowX: "auto", maxHeight: 520, overflowY: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <thead style={{ position: "sticky", top: 0, zIndex: 10, backgroundColor: "rgba(15,23,42,0.95)", backdropFilter: "blur(8px)" }}>
+                <tr style={{ borderBottom: "1px solid rgba(100,116,139,0.25)" }}>
+                  <th style={{ padding: "14px 16px", textAlign: "left", width: 44 }}>
+                    <input type="checkbox" checked={selectAll} onChange={handleSelectAll}
+                      style={{ width: 16, height: 16, cursor: "pointer", accentColor: "#34d399" }} />
+                  </th>
+                  {["Roll No", "Student Name", "Status"].map((h) => (
+                    <th key={h} style={{ padding: "14px 16px", textAlign: "left", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "#64748b" }}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {fetching ? (
+                  [...Array(6)].map((_, i) => (
+                    <tr key={i} style={{ borderBottom: "1px solid rgba(100,116,139,0.15)" }}>
+                      {[44, 80, 200, 120].map((w, j) => (
+                        <td key={j} style={{ padding: "14px 16px" }}>
+                          <div style={{ height: 14, width: w, backgroundColor: "rgba(100,116,139,0.2)", borderRadius: 6 }} />
+                        </td>
+                      ))}
                     </tr>
-                  ) : (
-                    students.map((student, index) => (
-                      <motion.tr
-                        key={student.id}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: index * 0.02 }}
-                        className={`border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors ${
-                          index % 2 === 0 ? "bg-slate-800/30" : "bg-slate-800/50"
-                        } ${
-                          attendanceData[student.id]?.selected
-                            ? "bg-emerald-500/5 hover:bg-emerald-500/10"
-                            : ""
-                        }`}
-                      >
-                        {/* Checkbox */}
-                        <td className="px-4 py-4">
-                          <input
-                            type="checkbox"
-                            checked={attendanceData[student.id]?.selected || false}
-                            onChange={() => handleCheckbox(student.id)}
-                            className="w-5 h-5 text-emerald-600 border-slate-600 rounded focus:ring-emerald-500 cursor-pointer"
-                          />
-                        </td>
-
-                        {/* Roll Number */}
-                        <td className="px-6 py-4 text-sm font-semibold text-slate-300">
-                          {student.roll_no || student.rollNo || index + 1}
-                        </td>
-
-                        {/* Student Name */}
-                        <td className="px-6 py-4 text-sm font-medium text-white">
-                          {student.name}
-                        </td>
-
-                        {/* Status Dropdown */}
-                        <td className="px-6 py-4">
-                          <select
-                            value={attendanceData[student.id]?.status || "Present"}
-                            onChange={(e) =>
-                              handleStatusChange(student.id, e.target.value)
-                            }
-                            className={`w-full px-4 py-2 rounded-lg border-2 text-sm font-semibold cursor-pointer transition-all focus:outline-none focus:ring-2 ${
-                              attendanceData[student.id]?.status === "Present"
-                                ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400 focus:ring-emerald-500/50 hover:bg-emerald-500/20"
-                                : "border-red-500/50 bg-emerald-500/10 text-emerald-400 focus:ring-emerald-500/50 hover:bg-emerald-500/20"
-                            }`}
-                          >
-                            <option value="Present">✓ Present</option>
-                            <option value="Absent">✗ Absent</option>
-                          </select>
-                        </td>
-                      </motion.tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  ))
+                ) : filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} style={{ padding: "60px 16px", textAlign: "center", color: "#475569" }}>
+                      {search ? "No students match your search." : "No students found."}
+                    </td>
+                  </tr>
+                ) : filtered.map((student, i) => {
+                  const isSelected = attendanceData[student.id]?.selected;
+                  return (
+                    <motion.tr key={student.id}
+                      initial={{ opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.025 }}
+                      style={{ borderBottom: "1px solid rgba(100,116,139,0.12)", backgroundColor: isSelected ? "rgba(52,211,153,0.04)" : "transparent", transition: "background-color 0.2s" }}
+                      onMouseOver={(e) => e.currentTarget.style.backgroundColor = isSelected ? "rgba(52,211,153,0.08)" : "rgba(100,116,139,0.08)"}
+                      onMouseOut={(e) => e.currentTarget.style.backgroundColor = isSelected ? "rgba(52,211,153,0.04)" : "transparent"}
+                    >
+                      <td style={{ padding: "13px 16px" }}>
+                        <input type="checkbox" checked={isSelected || false} onChange={() => handleCheckbox(student.id)}
+                          style={{ width: 16, height: 16, cursor: "pointer", accentColor: "#34d399" }} />
+                      </td>
+                      <td style={{ padding: "13px 16px", color: "#94a3b8", fontWeight: 600 }}>
+                        {student.roll_no || student.rollNo || i + 1}
+                      </td>
+                      <td style={{ padding: "13px 16px", color: "#f1f5f9", fontWeight: 500 }}>
+                        {student.name}
+                      </td>
+                      <td style={{ padding: "13px 16px" }}>
+                        <StatusToggle
+                          status={attendanceData[student.id]?.status || "Present"}
+                          onChange={(val) => handleStatusChange(student.id, val)}
+                        />
+                      </td>
+                    </motion.tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
+
+          {!fetching && filtered.length > 0 && (
+            <div style={{ padding: "12px 20px", borderTop: "1px solid rgba(100,116,139,0.2)", fontSize: 11, color: "#475569" }}>
+              Showing {filtered.length} of {students.length} student{students.length !== 1 ? "s" : ""}
+            </div>
+          )}
         </motion.div>
 
-        {/* Footer */}
-        <p className="text-center mt-8 text-slate-500 text-[10px] uppercase tracking-widest">
-          Secure Academic Record Entry System • Powered by Modern Education Platform
+        <p style={{ textAlign: "center", marginTop: 28, color: "#334155", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.12em" }}>
+          Secure Academic Record Entry System · Powered by Modern Education Platform
         </p>
       </div>
     </div>
