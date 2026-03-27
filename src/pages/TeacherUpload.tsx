@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { getAuthHeaders } from "@/utils/auth";
 
 export default function TeacherUpload() {
   const [file, setFile] = useState(null);

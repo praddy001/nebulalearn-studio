@@ -11,7 +11,7 @@ from app.routes.notes_routes import notes_bp
 from app.routes.student import student_bp
 from app.routes.attendance import attendance_bp
 from app.routes.event import event_bp
-from app.routes.admin import admin_bp
+
 
 
 
@@ -46,7 +46,7 @@ def create_app():
     app.register_blueprint(chat_bp,url_prefix="/api/chat")
     app.register_blueprint(attendance_bp,url_prefix="/api/attendance")
     app.register_blueprint(event_bp,url_prefix="/api/events")
-    app.register_blueprint(admin_bp)
+    
 
     @app.route("/api/health")
     def health():

@@ -22,26 +22,35 @@ const Login = () => {
     try {
       const res = await fetch("http://localhost:5000/api/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(formData),
       });
 
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data.error || "Login failed");
-
-      // ✅ Save auth
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("role", data.user.role);
-
-      toast({ title: "Login successful" });
-
-      // ✅ Role-based redirect
-      if (data.user.role === "teacher") {
-        navigate("/dashboard");
-      } else {
-        navigate("/dashboard");
+      if (!res.ok) {
+        throw new Error(data.error || "Login failed");
       }
+
+      // ✅ SAVE TOKEN
+      localStorage.setItem("token", data.token);
+
+      // ✅ SAVE FULL USER (VERY IMPORTANT)
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      // ❌ REMOVE THIS (not needed anymore)
+      // localStorage.setItem("role", data.user.role);
+
+      toast({
+        title: "Login successful",
+        description: `Welcome ${data.user.name}`,
+      });
+
+      // ✅ REDIRECT (same for all roles)
+      navigate("/dashboard");
+
     } catch (err: any) {
       toast({
         title: "Login failed",
@@ -54,18 +63,23 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-muted">
+      <Card className="w-full max-w-md shadow-lg">
         <CardHeader>
-          <CardTitle>Login</CardTitle>
+          <CardTitle className="text-center text-xl font-bold">
+            Login to NebulaLearn
+          </CardTitle>
         </CardHeader>
 
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+
+            {/* Email */}
             <div>
               <Label>Email</Label>
               <Input
                 type="email"
+                placeholder="Enter your email"
                 required
                 value={formData.email}
                 onChange={(e) =>
@@ -74,10 +88,12 @@ const Login = () => {
               />
             </div>
 
+            {/* Password */}
             <div>
               <Label>Password</Label>
               <Input
                 type="password"
+                placeholder="Enter your password"
                 required
                 value={formData.password}
                 onChange={(e) =>
@@ -86,11 +102,13 @@ const Login = () => {
               />
             </div>
 
+            {/* Button */}
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Signing in..." : "Login"}
             </Button>
           </form>
 
+          {/* Register Link */}
           <p className="text-center text-sm mt-4">
             Don’t have an account?{" "}
             <Link to="/register" className="text-primary underline">

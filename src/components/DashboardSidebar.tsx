@@ -43,14 +43,29 @@
     { icon: MessageSquare, label: 'Messages', href: '/staff/messages', badge: '5' },
   ];
 
+  const adminItems: SidebarItem[] = [
+  { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
+  { icon: Users, label: '👑 Manage Users', href: '/admin' },
+  { icon: FileText, label: 'Notes', href: '/notes' },
+  { icon: Calendar, label: 'Events', href: '/admin/events' },
+  { icon: MessageSquare, label: 'Messages', href: '/admin/messages' },
+ ];
+
   interface DashboardSidebarProps {
-    type?: 'student' | 'staff';
-  }
+  type?: 'student' | 'staff' | 'admin';
+ }
 
   export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ type = 'student' }) => {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const location = useLocation();
-    const items = type === 'student' ? studentItems : staffItems;
+    const safeType = type || 'student';
+
+    const items =
+      safeType === 'admin'
+       ? adminItems
+       : safeType === 'student'
+       ? studentItems
+       : staffItems;
 
     return (
       <motion.aside
@@ -88,7 +103,7 @@
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           {items.map((item) => {
-            const isActive = location.pathname === item.href;
+            const isActive = location.pathname.startsWith(item.href);
             return (
               <Link key={item.href} to={item.href}>
                 <motion.div

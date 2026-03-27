@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import api from "@/services/api";
+import { getAuthHeaders } from "@/utils/auth";
 
 const Field = ({ label, children }) => (
   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -31,6 +32,7 @@ const inputStyle = {
   transition: "border-color 0.2s",
   fontFamily: "inherit",
 };
+
 
 export default function PostEvent() {
   const [title, setTitle] = useState("");

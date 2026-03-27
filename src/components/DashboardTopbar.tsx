@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -19,22 +19,29 @@ import {
   LogOut,
   HelpCircle,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
-interface DashboardTopbarProps {
-  userName?: string;
-  userAvatar?: string;
-  userRole?: string;
-}
+export const DashboardTopbar: React.FC = () => {
+  const [user, setUser] = useState<any>({});
+  const navigate = useNavigate();
 
-export const DashboardTopbar: React.FC<DashboardTopbarProps> = ({
-  userName = 'John Doe',
-  userAvatar,
-  userRole = 'Student',
-}) => {
+  // ✅ Load user from localStorage
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+    setUser(storedUser);
+  }, []);
+
+  // ✅ Logout
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login");
+  };
+
   return (
     <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-lg border-b border-border">
       <div className="flex items-center justify-between h-16 px-6">
+
         {/* Search */}
         <div className="flex-1 max-w-md">
           <Input
@@ -47,33 +54,14 @@ export const DashboardTopbar: React.FC<DashboardTopbarProps> = ({
 
         {/* Actions */}
         <div className="flex items-center gap-4">
+
           {/* Notifications */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-highlight text-highlight-foreground text-xs rounded-full flex items-center justify-center">
-                  3
-                </span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
-              <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
-                <span className="font-medium">New notes uploaded</span>
-                <span className="text-sm text-muted-foreground">Physics Chapter 5 is now available</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
-                <span className="font-medium">Event reminder</span>
-                <span className="text-sm text-muted-foreground">Tech Symposium starts in 2 hours</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
-                <span className="font-medium">Attendance marked</span>
-                <span className="text-sm text-muted-foreground">Your attendance for today has been recorded</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Button variant="ghost" size="icon" className="relative">
+            <Bell className="w-5 h-5" />
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-highlight text-white text-xs rounded-full flex items-center justify-center">
+              3
+            </span>
+          </Button>
 
           {/* Help */}
           <Button variant="ghost" size="icon">
@@ -85,41 +73,51 @@ export const DashboardTopbar: React.FC<DashboardTopbarProps> = ({
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center gap-3 pl-2 pr-4">
                 <Avatar className="w-8 h-8">
-                  <AvatarImage src={userAvatar} alt={userName} />
-                  <AvatarFallback className="bg-primary text-primary-foreground">
-                    {userName.split(' ').map(n => n[0]).join('')}
+                  <AvatarImage src={user?.avatar} />
+                  <AvatarFallback className="bg-primary text-white">
+                    {user?.name?.charAt(0) || "U"}
                   </AvatarFallback>
                 </Avatar>
+
                 <div className="hidden sm:block text-left">
-                  <p className="text-sm font-medium">{userName}</p>
-                  <p className="text-xs text-muted-foreground">{userRole}</p>
+                  <p className="text-sm font-medium">{user?.name}</p>
+                  <p className="text-xs text-muted-foreground capitalize">
+                    {user?.role}
+                  </p>
                 </div>
               </Button>
             </DropdownMenuTrigger>
+
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
+
               <DropdownMenuItem asChild>
                 <Link to="/profile" className="flex items-center gap-2">
                   <User className="w-4 h-4" />
                   Profile
                 </Link>
               </DropdownMenuItem>
+
               <DropdownMenuItem asChild>
                 <Link to="/settings" className="flex items-center gap-2">
                   <Settings className="w-4 h-4" />
                   Settings
                 </Link>
               </DropdownMenuItem>
+
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild className="text-destructive">
-                <Link to="/" className="flex items-center gap-2">
-                  <LogOut className="w-4 h-4" />
-                  Logout
-                </Link>
+
+              <DropdownMenuItem
+                onClick={handleLogout}
+                className="text-destructive flex items-center gap-2 cursor-pointer"
+              >
+                <LogOut className="w-4 h-4" />
+                Logout
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
         </div>
       </div>
     </header>

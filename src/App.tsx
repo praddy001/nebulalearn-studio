@@ -16,6 +16,17 @@ import TeacherEvents from "./pages/teacher/TeacherEvents";
 import StudentAttendance from "./pages/student/StudentAttendance";
 import StudentEvents from "./pages/student/StudentEvents";
 import TeacherStudents from "./pages/teacher/TeacherStudents";
+import AdminPanel from "./pages/AdminPanel";
+
+const AdminRoute = ({ children }) => {
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+  if (user.role !== "admin") {
+    return <Navigate to="/dashboard" />;
+  }
+
+  return children;
+};
 
 
 
@@ -95,6 +106,14 @@ const App = () => (
               <ProtectedRoute role="student">
                 <StudentAttendance />
               </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <AdminPanel />
+              </AdminRoute>
             }
           />
 

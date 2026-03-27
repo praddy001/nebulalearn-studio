@@ -77,7 +77,7 @@ def ask():
         # AI FALLBACK (NO DOCUMENT FOUND)
         # --------------------------------------------------
         if not results:
-            ai_answer = ask_ai(raw_question, history)
+            ai_answer = ask_ai(raw_question, "", history)
             print("AI FALLBACK ANSWER:", ai_answer)
 
             # SAVE CHAT HISTORY
@@ -108,7 +108,7 @@ def ask():
         # --------------------------------------------------
         full_context = context + "\n\nConversation History:\n" + history
 
-        ai_answer = ask_ai(raw_question, full_context)
+        ai_answer = ask_ai(raw_question, context, history)
         print("AI ANSWER:", ai_answer)
 
         # --------------------------------------------------

@@ -7,6 +7,7 @@ from ..utils.jwt_utils import (
 )
 from app.extension import db
 from app.models import User
+from ..utils.admin_middleware import admin_required
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/api/auth")
 
@@ -107,4 +108,56 @@ def me():
         "name": user.name,
         "email": user.email,
         "role": user.role,
+    }), 200
+
+# ----------------------------
+# ADMIN: GET ALL USERS
+# ----------------------------
+@auth_bp.route("/users", methods=["GET"])
+@token_required
+@admin_required
+def get_all_users():
+    users = User.query.all()
+
+    return jsonify([
+        {
+            "id": u.id,
+            "name": u.name,
+            "email": u.email,
+            "role": u.role,
+        }
+        for u in users
+    ]), 200
+
+# ----------------------------
+# ADMIN: CHANGE ROLE
+# ----------------------------
+@auth_bp.route("/change-role/<int:user_id>", methods=["PUT"])
+@token_required
+@admin_required
+def change_role(user_id):
+    data = request.get_json() or {}
+    new_role = data.get("role")
+
+    if new_role not in ("student", "teacher", "admin"):
+        return jsonify({"error": "invalid role"}), 400
+
+    user = User.query.get(user_id)
+
+    if not user:
+        return jsonify({"error": "user not found"}), 404
+
+    # 🔒 prevent editing admin (optional but good)
+    if user.role == "admin":
+        return jsonify({"error": "cannot modify admin"}), 403
+
+    user.role = new_role
+    db.session.commit()
+
+    return jsonify({
+        "message": "role updated successfully",
+        "user": {
+            "id": user.id,
+            "role": user.role
+        }
     }), 200
