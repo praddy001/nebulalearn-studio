@@ -21,7 +21,7 @@ def create_app():
     app = Flask(__name__, instance_relative_config=False)
     app.config.from_object("config.Config")
 
-    CORS(app)
+    CORS(app, supports_credentials=True, origins=["https://nebulalearn-studio.vercel.app"])
 
 
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
