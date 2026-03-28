@@ -21,11 +21,7 @@ def create_app():
     app = Flask(__name__, instance_relative_config=False)
     app.config.from_object("config.Config")
 
-    CORS(
-    app,
-    resources={r"/api/*": {"origins": "*"}},
-    supports_credentials=True
- )
+    CORS(app)
 
 
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
