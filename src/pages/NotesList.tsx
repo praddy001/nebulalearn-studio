@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 interface Note {
   id: number;
   filename: string;
@@ -22,7 +24,7 @@ export default function NotesList() {
         return;
       }
       try {
-        const res = await fetch("http://localhost:5000/api/files/", {
+        const res = await fetch(`${API_URL}/api/files/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error("Failed to fetch");
@@ -42,7 +44,7 @@ export default function NotesList() {
     if (!token) return alert("Not authenticated");
 
     try {
-      const res = await fetch(`http://localhost:5000/api/files/${fileId}/download`, {
+      const res = await fetch(`${API_URL}/api/files/${fileId}/download`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Download failed");

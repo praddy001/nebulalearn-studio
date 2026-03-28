@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { getAuthHeaders } from "@/utils/auth";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function TeacherUpload() {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -25,7 +27,7 @@ export default function TeacherUpload() {
 
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:5000/api/files/upload", {
+      const res = await fetch(`${API_URL}/api/files/upload`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

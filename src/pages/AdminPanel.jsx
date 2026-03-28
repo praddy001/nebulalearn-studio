@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const token = () => localStorage.getItem("token");
 
 const ROLE_CONFIG = {
@@ -43,7 +45,7 @@ export default function AdminPanel() {
 
   // Auth guard
   useEffect(() => {
-    fetch("http://localhost:5000/api/auth/me", {
+    fetch(`${API_URL}/api/auth/me`, {
       headers: { Authorization: "Bearer " + token() },
     })
       .then((r) => r.json())
@@ -54,7 +56,7 @@ export default function AdminPanel() {
   // Load users
   useEffect(() => {
     setFetching(true);
-    fetch("http://localhost:5000/api/auth/users", {
+    fetch(`${API_URL}/api/auth/users`, {
       headers: { Authorization: "Bearer " + token() },
     })
       .then((r) => r.json())
@@ -67,7 +69,7 @@ export default function AdminPanel() {
     setChanging(userId);
     setError(null);
     try {
-      const res = await fetch(`http://localhost:5000/api/auth/change-role/${userId}`, {
+      const res = await fetch(`${API_URL}/api/auth/change-role/${userId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + token() },
         body: JSON.stringify({ role: newRole }),

@@ -14,6 +14,8 @@ import {
   ArrowRight,
 } from "lucide-react";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 /* ---------------- TYPES ---------------- */
 interface User {
   id: number;
@@ -112,7 +114,7 @@ const Dashboard = () => {
       return;
     }
 
-    fetch("http://localhost:5000/api/auth/me", {
+    fetch(`${API_URL}/api/auth/me`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
