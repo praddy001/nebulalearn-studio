@@ -21,13 +21,11 @@ def create_app():
     app = Flask(__name__, instance_relative_config=False)
     app.config.from_object("config.Config")
 
-    frontend = os.getenv("FRONTEND_URL", "http://localhost:8080")
-
     CORS(
-        app,
-        resources={r"/api/*": {"origins": frontend}},
-        supports_credentials=True
-    )
+    app,
+    resources={r"/api/*": {"origins": "*"}},
+    supports_credentials=True
+ )
 
 
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
