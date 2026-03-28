@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from flask_cors import CORS
+
 from sqlalchemy import or_
 import re
 from app import db
@@ -8,7 +8,7 @@ from app.utils.jwt_utils import decode_token
 from app.utils.ai_client import ask_ai
 
 chat_bp = Blueprint("chat", __name__, url_prefix="/api/chat")
-CORS(chat_bp, supports_credentials=True)
+
 
 
 # --------------------------------------------------

@@ -2,7 +2,7 @@ import os
 import uuid
 
 from flask import Blueprint, request, jsonify, current_app, send_file
-from flask_cors import CORS
+
 from werkzeug.utils import secure_filename
 
 from ..models import db, File, User
@@ -11,7 +11,7 @@ from ..utils.s3_utils import upload_to_s3, delete_from_s3
 from ..utils.text_extractor import extract_text_from_file
 
 files_bp = Blueprint("files", __name__, url_prefix="/api/files")
-CORS(files_bp, supports_credentials=True)
+
 
 
 # --------------------------------------------------
