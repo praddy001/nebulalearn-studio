@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 
 from sqlalchemy import or_
 import re
-from app import db
+from app.extension import db
 from app.models import File, User, ChatHistory
 from app.utils.jwt_utils import decode_token
 from app.utils.ai_client import ask_ai
