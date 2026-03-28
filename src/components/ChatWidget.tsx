@@ -48,7 +48,7 @@ const ChatWidget: React.FC = () => {
     setMessage('');
 
     try {
-      const res = await fetch("/api/chat/ask", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/chat/ask`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
